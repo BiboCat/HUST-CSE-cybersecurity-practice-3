@@ -1,0 +1,65 @@
+# 每行一个 scope，以 # 开头的行会被忽略
+# 用法： python oauth_flow.py --config config.json --scope-file scopes.example.txt
+#
+# 思路：按「命名风格」分组扫，先确定这个平台的命名法，再往里填。
+
+# ---- 1. 基线（已知可用，用来确认脚本本身没问题）----
+profile
+
+# ---- 2. 跟着 profile 变体（最优先，因为平台已经用了 profile 这个风格）----
+profile.private
+profile:private
+profile_private
+private_profile
+profile.full
+profile.all
+profile.read
+profile.private.read
+profile.write
+
+# ---- 3. 独立资源名 ----
+private
+privacy
+secret
+secrets
+vault
+notes
+memo
+diary
+account
+account.private
+account.full
+settings
+settings.private
+me
+self
+full
+all
+
+# ---- 4. 敏感 / 内部类 ----
+admin
+internal
+staff
+official
+sensitive
+confidential
+restricted
+hidden
+
+# ---- 5. OIDC 常规（很多平台白送）----
+openid
+email
+phone
+address
+offline_access
+user
+user:read
+read:user
+
+# ---- 6. 如果发现平台其实是分节 / 驼峰风格，照那种风格再来一轮 ----
+user:private
+user:read:private
+User.Read
+User.Private
+Profile.Read
+Profile.Private

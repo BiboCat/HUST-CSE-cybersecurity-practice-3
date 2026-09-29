@@ -1,0 +1,32 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# ---- 含凭据的本地配置（只提交 *.example.*） ----
+config.json
+*.local.json
+*.secret.*
+.env
+.env.*
+
+# ---- 编辑器 / IDE ----
+.vscode/
+.idea/
+*.swp
+*~
+
+# ---- 系统垃圾文件 ----
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ---- 运行产物 ----
+*.log
+output/
+result.json

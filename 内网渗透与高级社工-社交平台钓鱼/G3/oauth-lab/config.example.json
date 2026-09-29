@@ -1,0 +1,33 @@
+{
+  "_说明": "复制这个文件为 config.json 再填。脚本会优先读 config.json；命令行参数可以覆盖任意一项。",
+
+  "base_url": "http://172.17.0.13:15633",
+
+  "client_id": "app_fb9cb8a5f0f9",
+  "client_secret": "4ab4130fbea1f26017a4dc6e44976a36",
+
+  "_redirect_uri_说明": "★ 必须和注册时填的一字不差，原样照抄。第1棒和第4棒共用这一个变量，脚本不做任何加工。",
+  "redirect_uri": "/oauth/cb/app_fb9cb8a5f0f9",
+
+  "_cookie_说明": "登录平台后，F12 → Application → Cookies，把会话 Cookie 原文抄进来。会过期，失效时第1棒会拿到登录页。",
+  "cookie": "",
+
+  "scope": "profile",
+
+  "_端点_说明": "如果平台的路径不一样，在这里改。",
+  "authorize_path": "/oauth/authorize",
+  "token_path": "/oauth/token",
+  "api_paths": ["/api/me"],
+
+  "_可选参数": {
+    "response_type": "code",
+    "auth_style": "body",
+    "prompt": "",
+    "login_hint": "",
+    "code_challenge": "",
+    "code_verifier": "",
+    "code_challenge_method": "S256",
+    "timeout": 15,
+    "insecure_tls": false
+  }
+}
