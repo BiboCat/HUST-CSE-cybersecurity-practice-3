@@ -30,3 +30,31 @@ desktop.ini
 *.log
 output/
 result.json
+**/result.json
+
+# ---- 逆向 / 固件分析产物 ----
+# binwalk -e 的提取目录（G1 的 _logo.png.extracted、G3 的 extractions/）
+*.extracted/
+extractions/
+# Binwalk-G4 script.py 的中间产物；device.img 本身请按需决定是否提交
+*.enc.bin
+*.dec.bin
+# 靶机二进制样本（如 logo.png、firmware.bin、device.img、audit-log 等）
+# 体积大且属课程材料，一般不入库；需要展示时用 git add -f 强加
+*.img
+
+# ---- 补全的 Python 产物 ----
+*.pyo
+*.pyd
+.coverage
+.ipynb_checkpoints/
+
+# ---- Office / WPS 临时文件 ----
+~$*
+.~lock.*#
+
+# ---- 注意：以下内容请勿提交 ----
+# 1. config.json            —— 含 OAuth client_secret 与会话 Cookie
+# 2. oauth-lab/result.json  —— 含实际签发的 access_token（扫 scope 时的输出）
+# 3. *.env / *.secret.*     —— 任何真实凭据
+# 只提交 *.example.* 模板；模板里的 client_id / client_secret 也请替换为占位符。
