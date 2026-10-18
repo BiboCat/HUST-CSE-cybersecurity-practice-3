@@ -21,6 +21,8 @@ from __future__ import annotations
 
 import argparse
 import base64
+import binascii
+import codecs
 import os
 import re
 import secrets
@@ -160,6 +162,9 @@ def to_c_array(data: bytes, name: str = "data", per_line: int = 12,
     """生成 C 数组字面量，方便直接贴进源码或调试器。"""
     if not per_line or per_line < 1:
         per_line = 12
+    if not data:
+        # C 不允许零长数组，给一个可直接编译的占位
+        return "unsigned char %s[1] = { 0 };  /* 空数据 */" % name
     fmt = "0x%02X" if upper else "0x%02x"
     lines = []
     for start in range(0, len(data), per_line):
@@ -313,6 +318,22 @@ def load_key(args: argparse.Namespace) -> bytes:
     return key
 
 
+def _decode_hex_file(blob: bytes, encoding: str) -> str:
+    """把十六进制文本文件解码成 str，顺手吃掉 BOM。
+
+    Windows 上 `echo ... > x.txt`（PowerShell 5.1）/ `Out-File` 默认写 UTF-16LE，
+    记事本另存 UTF-8 又常带 BOM；这两种都不该让 hex 解析失败。
+    """
+    if blob.startswith(codecs.BOM_UTF8):
+        blob = blob[len(codecs.BOM_UTF8):]
+        return blob.decode("utf-8", errors="replace")
+    if blob[:2] in (codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE):
+        return blob.decode("utf-16", errors="replace")
+    if len(blob) >= 2 and blob.count(b"\x00") * 4 >= len(blob):   # 无 BOM 的 UTF-16LE
+        return blob.decode("utf-16-le", errors="replace")
+    return blob.decode(encoding, errors="replace").lstrip("\ufeff")
+
+
 def load_data(args: argparse.Namespace) -> bytes:
     sources = [x for x in (args.in_file, args.in_hex, args.in_hex_file,
                            args.in_text, args.in_b64) if x is not None]
@@ -326,12 +347,19 @@ def load_data(args: argparse.Namespace) -> bytes:
     if args.in_hex is not None:
         return parse_hex(args.in_hex)
     if args.in_hex_file is not None:
-        with open(args.in_hex_file, "r", encoding=args.encoding, errors="replace") as fh:
-            return parse_hex(fh.read())
+        with open(args.in_hex_file, "rb") as fh:
+            blob = fh.read()
+        return parse_hex(_decode_hex_file(blob, args.encoding))
     if args.in_text is not None:
         return args.in_text.encode(args.encoding)
     if args.in_b64 is not None:
-        return base64.b64decode(args.in_b64, validate=False)
+        # validate=True：非法字符必须报错，否则 "!!!" 会被静默吞成空串还返回成功
+        raw = "".join(args.in_b64.split())          # 容忍换行 / 空格
+        raw += "=" * (-len(raw) % 4)                # 容忍漏写 = 填充
+        try:
+            return base64.b64decode(raw, validate=True)
+        except binascii.Error as exc:
+            raise ValueError("Base64 解析失败: %s" % exc) from None
 
     # 默认：从 stdin 读原始字节
     return sys.stdin.buffer.read()
@@ -476,16 +504,22 @@ def main(argv: list[str] | None = None) -> int:
         return args.func(args)
     except ValueError as exc:
         return _fail(str(exc))
+    except LookupError as exc:
+        # 未知编码（--encoding 写错）抛的是 LookupError，不属于 ValueError
+        return _fail("编码错误: %s（请检查 --encoding 的取值）" % exc)
+    except BrokenPipeError:                         # pragma: no cover
+        # 必须排在 OSError 之前：BrokenPipeError 是 OSError 的子类，
+        # 否则 `... | head` 这种正常用法会被报成"文件操作失败"并返回 1。
+        try:
+            os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        except OSError:
+            pass
+        return 0
     except OSError as exc:
         return _fail("文件操作失败: %s" % exc)
     except KeyboardInterrupt:                       # pragma: no cover
         print("\n%s: 已中断" % PROG, file=sys.stderr)
         return 130
-    except BrokenPipeError:                         # pragma: no cover
-        try:
-            sys.stdout.close()
-        finally:
-            return 0
 
 
 if __name__ == "__main__":
